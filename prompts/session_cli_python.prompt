@@ -1,0 +1,34 @@
+<include>context/python_preamble.prompt</include>
+
+<pdd-reason>Click-based CLI exposing add/list/stats for study sessions.</pdd-reason>
+
+<pdd-interface>
+{
+  "type": "cli",
+  "cli": {
+    "commands": [
+      {"name": "add",   "description": "Record a new study session."},
+      {"name": "list",  "description": "Show all sessions."},
+      {"name": "stats", "description": "Show totals and per-topic breakdown."}
+    ]
+  }
+}
+</pdd-interface>
+
+<pdd-dependency>session_store_python.prompt</pdd-dependency>
+
+% Role & Scope
+A Click CLI (`study`) that wraps the session_store library.
+
+% Dependencies
+<session_store_usage>
+  <include>examples/session_store_example.py</include>
+</session_store_usage>
+
+% Requirements
+1. Entry point: a Click group named `cli` with three subcommands: add, list, stats.
+2. `study add --topic TEXT --minutes INT` calls session_store.add_session and prints the created id.
+3. `study list` prints one line per session: "{id} | {created_at} | {minutes}m | {topic}".
+4. `study stats` prints totals and a sorted per-topic breakdown in descending minutes.
+5. Store path defaults to ~/.study_tracker/sessions.json; overridable via --store PATH.
+6. All commands exit non-zero with a friendly message on ValueError from the store.

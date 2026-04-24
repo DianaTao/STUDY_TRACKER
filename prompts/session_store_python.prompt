@@ -1,0 +1,28 @@
+<include>context/python_preamble.prompt</include>
+
+<pdd-reason>In-memory + JSON-backed store for study sessions with summary stats.</pdd-reason>
+
+<pdd-interface>
+{
+  "type": "module",
+  "module": {
+    "functions": [
+      {"name": "add_session", "signature": "(store_path: Path, topic: str, minutes: int) -> dict", "returns": "dict"},
+      {"name": "list_sessions", "signature": "(store_path: Path) -> list[dict]", "returns": "list[dict]"},
+      {"name": "summarize", "signature": "(store_path: Path) -> dict", "returns": "dict"}
+    ]
+  }
+}
+</pdd-interface>
+
+% Role & Scope
+A tiny library that persists study sessions to a JSON file and produces summary stats.
+
+% Requirements
+1. A session is a dict with keys: id (int), topic (str), minutes (int), created_at (ISO-8601 str).
+2. add_session appends a new record; auto-increments id; returns the created record.
+3. list_sessions returns all records sorted by created_at ascending; returns [] if file missing.
+4. summarize returns {"total_sessions": int, "total_minutes": int, "by_topic": {topic: minutes}}.
+5. Creates parent directories if missing; never throws on a fresh project.
+6. Reject non-positive minutes or empty topic with ValueError.
+7. All I/O uses UTF-8 JSON; atomic write (write to temp, rename).

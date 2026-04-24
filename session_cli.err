@@ -1,0 +1,56 @@
+============================= test session starts ==============================
+platform darwin -- Python 3.12.11, pytest-8.3.5, pluggy-1.6.0
+rootdir: /Users/yifeitao/Desktop/study_tracker
+configfile: pyproject.toml
+plugins: cov-5.0.0, anyio-4.13.0
+collected 8 items
+
+tests/test_session_cli.py ......F.                                       [100%]
+
+=================================== FAILURES ===================================
+__________________________ test_formal_sorting_logic ___________________________
+
+    def test_formal_sorting_logic():
+        """
+        Formal verification using Z3 to ensure the sorting logic used in 'stats'
+        always produces a descending order by value.
+        """
+        from z3 import Int, Solver, sat, And
+    
+        # We want to prove that for any two adjacent elements in the sorted list,
+        # the first one's value is greater than or equal to the second.
+        # In the code: sorted(data["by_topic"].items(), key=lambda item: item[1], reverse=True)
+    
+        def check_descending_property(val1, val2):
+            s = Solver()
+            # Suppose val1 comes before val2 in the list because val1 >= val2
+            # We want to check if there is any case where val1 < val2 despite our logic
+            s.add(val1 < val2)
+    
+            # If the solver is UNSAT, it means it's impossible for val1 < val2
+            # given the condition that val1 is picked as 'higher' in a descending sort.
+            # This is a trivial property for the built-in 'sorted', but demonstrates
+            # the pattern for verifying custom business logic transforms.
+            return s.check()
+    
+        v1 = Int('v1')
+        v2 = Int('v2')
+    
+        # Verification: If we assume our sort correctly places v1 before v2
+        # based on Python's stable descending sort, does it hold?
+        # Logic: sorted(..., reverse=True) -> item[i] >= item[i+1]
+    
+        # We define the "sorted" constraint
+        is_sorted_desc = v1 >= v2
+    
+        # Is there a case where it is "sorted" but the property v1 >= v2 is violated?
+        s = Solver()
+        s.add(And(is_sorted_desc, v1 < v2))
+    
+>       assert s.check() == sat.unsat, "Descending sort logic property violated"
+E       AttributeError: 'CheckSatResult' object has no attribute 'unsat'
+
+tests/test_session_cli.py:161: AttributeError
+=========================== short test summary info ============================
+FAILED tests/test_session_cli.py::test_formal_sorting_logic - AttributeError:...
+========================= 1 failed, 7 passed in 0.10s ==========================

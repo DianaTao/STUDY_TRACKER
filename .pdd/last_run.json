@@ -1,0 +1,15 @@
+{
+  "1550ffabc168ea58": {
+    "argv": [
+      "generate",
+      "prompts/session_cli_python.prompt",
+      "--output",
+      "src/session_cli.py"
+    ],
+    "project_root": "/Users/yifeitao/Desktop/study_tracker",
+    "fingerprint": "486359d4fd51da398602d518132dd27fc03f7ecc845bcd28aa7a2f023f7c1352",
+    "git_head": "",
+    "subcommand": "generate",
+    "timestamp": 1777066762.527518
+  }
+}

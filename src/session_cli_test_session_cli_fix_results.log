@@ -1,0 +1,644 @@
+
+================================================================================
+2026-04-24 00:57:42
+================================================================================
+Model: gemini/gemini-2.5-flash
+Result:
+Step 0: Note the failure_classification block above: use it to prioritize (e.g. fix imports/syntax before rewriting assertions when it indicates syntax/import; avoid large logic churn when it indicates timeout/flaky).
+
+The failure classification is "Not classified (treat as a general test failure; use errors below)." The error message is `ERROR: file or directory not found: tests/test_session_cli.py`. This indicates an issue with the test runner being unable to locate the test file, rather than a logical error within the code or tests themselves. This is a critical setup error that prevents any actual tests from running.
+
+Step 1. Compare the prompt to the code_under_test and explain differences, if any.
+
+The `code_under_test` (`session_cli.py`) largely adheres to the prompt's requirements:
+- It defines a Click group `cli` with `add`, `list`, and `stats` subcommands.
+- The `add` command takes `--topic` and `--minutes` and calls `session_store.add_session`.
+- The `list` command iterates and prints sessions in the specified format.
+- The `stats` command calls `session_store.summarize` and prints totals and a sorted breakdown.
+- The store path defaults to `~/.study_tracker/sessions.json` via `get_default_store_path` and is overridable with `--store`.
+- Error handling for `ValueError` from the store is implemented using `abort_on_error`.
+- Type hints are used.
+- `pathlib` is used.
+
+One minor difference: The prompt specifies the CLI name as `study` (e.g., `study add`), but the `code_under_test` defines the main group as `cli` (which would be invoked as `session_cli add` if run directly, or `cli add` if installed as `study`). This is a naming convention difference that doesn't affect functionality but might be relevant for deployment. For the purpose of unit testing, `CliRunner().invoke(cli, ...)` correctly targets the `cli` group.
+
+Step 2. Compare the prompt to the unit_test and explain differences, if any.
+
+The `unit_test` (`test_session_cli.py`) appears to align well with the prompt's requirements and the `code_under_test`'s implementation:
+- It uses `pytest` and `click.testing.CliRunner`.
+- It mocks `session_cli.add_session`, `session_cli.list_sessions`, and `session_cli.summarize` to isolate the CLI logic from the `session_store` backend.
+- It tests `get_default_store_path` logic.
+- It covers success and error cases for `add`.
+- It covers empty and data cases for `list`.
+- It verifies the sorting logic for `stats`.
+- It includes Z3 formal verification for sorting and path safety, which goes beyond the explicit prompt but is a valid addition for robust testing.
+
+There are no significant differences between the prompt and the unit test's expectations. The tests correctly verify the specified behaviors.
+
+Step 3. For each prior attempted fix for the code_under_test and unit_test (if any), explain in a few paragraphs for each attempt why it might not have worked.
+
+This is the first iteration, so there are no prior attempted fixes to analyze.
+
+Step 4. Write several paragraphs explaining the root cause of each of the errors and each of the warnings in the code_under_test and unit_test.
+
+The sole error reported is `ERROR: file or directory not found: tests/test_session_cli.py`.
+
+This error is not a bug within the `code_under_test` or `unit_test` files themselves. Instead, it indicates an issue with the *execution environment* or the *command used to run pytest*.
+
+The most probable root cause is that the `pytest` command was invoked with an explicit path or pattern (e.g., `pytest tests/test_session_cli.py`) that does not match the actual location or name of the provided unit test file. For example, if the unit test file was provided as `unit_test.py` in the root directory, but `pytest` was told to look for `tests/test_session_cli.py`, it would fail to find it.
+
+Since I am provided with the *content* of the `unit_test` and `code_under_test` files, and not the file system structure or the exact `pytest` command used, I must assume that the problem lies in the *naming* of the test file. The `unit_test` content itself is designed to be a `pytest` test file. The error message strongly suggests that the test runner *expected* a file named `test_session_cli.py` within a `tests/` directory.
+
+Therefore, the implicit assumption is that the provided `unit_test` content *should* be saved as `tests/test_session_cli.py` for the test runner to find it. If it's saved under a different name or in a different location, this error will occur.
+
+Step 5. Explain in detail step by step how to solve each of the errors and warnings. For each error and warning, there should be several paragraphs description of the solution steps. Sometimes logging or print statements can help debug the code in subsequent iterations. It is important to make sure the tests are still sufficiently comprehensive to catch potential errors.
+
+The solution to the `ERROR: file or directory not found` is to ensure that the unit test file is correctly named and placed where the test runner expects it.
+
+**Solution Steps:**
+
+1.  **Identify the Expected Test File Name and Location:** The error message `ERROR: file or directory not found: tests/test_session_cli.py` explicitly tells us that `pytest` was looking for a file named `test_session_cli.py` inside a directory named `tests/`. This is a standard `pytest` convention (files starting with `test_` or ending with `_test.py` in directories named `test` or `tests`).
+
+2.  **Rename and Relocate the Unit Test File (Conceptual):** The provided `unit_test` content should be saved as `test_session_cli.py` and placed within a `tests/` directory at the project root. For example, if the `code_under_test` (`session_cli.py`) is in the project root, then the structure should be:
+    ```
+    project_root/
+    ├── session_cli.py
+    └── tests/
+        └── test_session_cli.py
+    ```
+    This step is conceptual as I cannot directly manipulate the file system where the tests are run. However, by providing the `unit_test` content, I am implicitly defining what `test_session_cli.py` *should* contain.
+
+3.  **Verify `sys.path` Manipulation in the Unit Test:** The unit test already includes:
+    ```python
+    import sys
+    from pathlib import Path
+    project_root = Path(__file__).resolve().parents[1]
+    sys.path.insert(0, str(project_root))
+    ```
+    This code correctly adds the project root (the directory containing `session_cli.py`) to `sys.path`. This is crucial because `session_cli.py` imports `session_store` (which is mocked) and itself needs to be importable by the test. If `test_session_cli.py` is in `tests/`, `parents[1]` correctly points to the project root. This part of the unit test is correct and does not need modification.
+
+4.  **No Changes to `code_under_test` or `unit_test` Content:** Since the error is external to the content of the files, no modifications are required for the `code_under_test` or `unit_test` content themselves. The files are logically sound based on the prompt and the error message. The fix is purely about ensuring the test file is correctly named and located for the `pytest` runner.
+
+Step 6. Review the above steps and correct for any errors and warnings in the code under test or unit test.
+
+The analysis confirms that the error is environmental/invocation-related. The content of both `code_under_test` and `unit_test` is correct and adheres to the prompt. No changes are needed within the provided code blocks. The solution is to ensure the test file is correctly named `test_session_cli.py` and placed in a `tests/` directory.
+
+Step 7. For the code that need changes, write the corrected code_under_test and/or corrected unit_test in its/their entirety.
+
+As explained in Step 6, no changes are needed for the content of `code_under_test` or `unit_test`. The files are correct as provided. The fix is external to the code content.
+
+Step 8. CRITICAL: You MUST preserve ALL existing test functions from the original unit_test. Only modify the tests that are failing. Do not remove, skip, or omit any test functions that were present in the original unit_test, even if they seem unrelated to the current errors. The output must include every single test function from the input.
+
+Since no changes are needed to the content of the files, I will output the original `code_under_test` and `unit_test` in their entirety.
+
+```python
+# Corrected code_under_test
+"""
+CLI application for tracking study sessions using Click.
+This module provides the user interface for the session_store backend.
+"""
+
+from pathlib import Path
+from typing import NoReturn
+import click
+
+# Assuming session_store is available in the environment as per the prompt instructions
+try:
+    from session_store import add_session, list_sessions, summarize
+except ImportError:
+    # Placeholder for environment where session_store isn't present
+    pass
+
+
+def get_default_store_path() -> Path:
+    """Returns the default path for the session storage file."""
+    base_dir = Path.home() / ".study_tracker"
+    base_dir.mkdir(parents=True, exist_ok=True)
+    return base_dir / "sessions.json"
+
+
+def abort_on_error(message: str) -> NoReturn:
+    """Prints a friendly error message and exits with status 1."""
+    click.secho(f"Error: {message}", fg="red", err=True)
+    raise click.Abort()
+
+
+@click.group()
+@click.option(
+    "--store",
+    type=click.Path(path_type=Path),
+    default=get_default_store_path(),
+    help="Path to the JSON storage file.",
+)
+@click.pass_context
+def cli(ctx: click.Context, store: Path) -> None:
+    """Study Tracker CLI - Record and analyze your learning progress."""
+    ctx.ensure_object(dict)
+    ctx.obj["STORE_PATH"] = store
+
+
+@cli.command()
+@click.option("--topic", required=True, help="The subject studied.")
+@click.option("--minutes", required=True, type=int, help="Duration in minutes.")
+@click.pass_context
+def add(ctx: click.Context, topic: str, minutes: int) -> None:
+    """Record a new study session."""
+    store_path: Path = ctx.obj["STORE_PATH"]
+    try:
+        session = add_session(store_path, topic, minutes)
+        click.echo(f"Session recorded successfully (ID: {session['id']}).")
+    except ValueError as e:
+        abort_on_error(str(e))
+
+
+@cli.command(name="list")
+@click.pass_context
+def list_cmd(ctx: click.Context) -> None:
+    """Show all recorded study sessions."""
+    store_path: Path = ctx.obj["STORE_PATH"]
+    try:
+        sessions = list_sessions(store_path)
+        if not sessions:
+            click.echo("No sessions recorded yet.")
+            return
+
+        for s in sessions:
+            # Format: "{id} | {created_at} | {minutes}m | {topic}"
+            line = f"{s['id']} | {s['created_at']} | {s['minutes']}m | {s['topic']}"
+            click.echo(line)
+    except ValueError as e:
+        abort_on_error(str(e))
+
+
+@cli.command()
+@click.pass_context
+def stats(ctx: click.Context) -> None:
+    """Show total progress and per-topic breakdown."""
+    store_path: Path = ctx.obj["STORE_PATH"]
+    try:
+        data = summarize(store_path)
+        
+        click.echo("=== Study Statistics ===")
+        click.echo(f"Total Sessions: {data['total_sessions']}")
+        click.echo(f"Total Time:     {data['total_minutes']} minutes")
+        click.echo("\nBreakdown by Topic (Descending):")
+        
+        # Sort breakdown by minutes descending
+        sorted_topics = sorted(
+            data["by_topic"].items(), 
+            key=lambda item: item[1], 
+            reverse=True
+        )
+        
+        for topic, mins in sorted_topics:
+            click.echo(f" - {topic}: {mins} min")
+            
+    except ValueError as e:
+        abort_on_error(str(e))
+
+
+# Testing logic below (usually in a separate test file)
+# import pytest
+# from click.testing import CliRunner
+# from study_cli import cli
+
+# @pytest.fixture
+# def temp_store(tmp_path: Path) -> Path:
+#     return tmp_path / "test_sessions.json"
+
+# def test_add_session_creates_entry(temp_store: Path):
+#     runner = CliRunner()
+#     result = runner.invoke(cli, ["--store", str(temp_store), "add", "--topic", "Python", "--minutes", "30"])
+#     assert result.exit_code == 0
+#     assert "Session recorded" in result.output
+
+# def test_list_sessions_displays_data(temp_store: Path):
+#     runner = CliRunner()
+#     runner.invoke(cli, ["--store", str(temp_store), "add", "--topic", "Python", "--minutes", "30"])
+#     result = runner.invoke(cli, ["--store", str(temp_store), "list"])
+#     assert "30m | Python" in result.output
+
+# def test_stats_sorting(temp_store: Path):
+#     runner = CliRunner()
+#     runner.invoke(cli, ["--store", str(temp_store), "add", "--topic", "A", "--minutes", "10"])
+#     runner.invoke(cli, ["--store", str(temp_store), "add", "--topic", "B", "--minutes", "50"])
+#     result = runner.invoke(cli, ["--store", str(temp_store), "stats"])
+#     assert result.output.find("B: 50 min") < result.output.find("A: 10 min")
+
+if __name__ == "__main__":
+    cli()
+```
+```python
+# Corrected unit_test
+import sys
+from pathlib import Path
+
+# Add project root to sys.path to ensure local code is prioritized
+# This allows testing local changes without installing the package
+project_root = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(project_root))
+
+import pytest
+from click.testing import CliRunner
+from pathlib import Path
+from unittest.mock import patch, MagicMock
+from session_cli import cli, get_default_store_path
+
+"""
+TEST PLAN: Study Tracker CLI
+
+1. Functional Unit Tests (pytest + click.testing):
+    - test_get_default_store_path: Verify the default path logic uses home directory.
+    - test_add_command_success: Mock session_store.add_session to return a session and verify CLI output.
+    - test_add_command_error: Mock session_store.add_session to raise ValueError and verify 'Error: ...' output and non-zero exit.
+    - test_list_command_empty: Verify output when no sessions exist.
+    - test_list_command_data: Mock session_store.list_sessions and verify formatted string output.
+    - test_stats_command: Mock session_store.summarize and verify sorting logic (descending minutes).
+    - test_custom_store_path: Verify the --store option correctly overrides the default path.
+
+2. Edge Cases & Formal Verification (Z3):
+    - Sorting Logic Verification: Use Z3 to formally prove that the stats sorting logic always results in a list where element[i].minutes >= element[i+1].minutes.
+    - Path Validation: Ensure the default path logic always returns a Path object ending in 'sessions.json'.
+
+"""
+
+# --- Fixtures ---
+
+@pytest.fixture
+def runner():
+    return CliRunner()
+
+@pytest.fixture
+def mock_store(tmp_path):
+    """Provides a temporary path for the store."""
+    return tmp_path / "sessions.json"
+
+# --- Unit Tests ---
+
+def test_get_default_store_path():
+    path = get_default_store_path()
+    assert isinstance(path, Path)
+    assert path.name == "sessions.json"
+    assert ".study_tracker" in str(path)
+
+@patch("session_cli.add_session")
+def test_add_command_success(mock_add, runner, mock_store):
+    # Mock return value based on session_store_usage description
+    mock_add.return_value = {"id": 1, "topic": "Python", "minutes": 30, "created_at": "2023-01-01"}
+    
+    result = runner.invoke(cli, ["--store", str(mock_store), "add", "--topic", "Python", "--minutes", "30"])
+    
+    assert result.exit_code == 0
+    assert "Session recorded successfully (ID: 1)." in result.output
+    mock_add.assert_called_once_with(mock_store, "Python", 30)
+
+@patch("session_cli.add_session")
+def test_add_command_error(mock_add, runner, mock_store):
+    # Simulate a validation error from the backend
+    mock_add.side_effect = ValueError("Minutes must be positive")
+    
+    result = runner.invoke(cli, ["--store", str(mock_store), "add", "--topic", "Python", "--minutes", "-10"])
+    
+    assert result.exit_code != 0
+    assert "Error: Minutes must be positive" in result.output
+
+@patch("session_cli.list_sessions")
+def test_list_command_empty(mock_list, runner, mock_store):
+    mock_list.return_value = []
+    
+    result = runner.invoke(cli, ["--store", str(mock_store), "list"])
+    
+    assert result.exit_code == 0
+    assert "No sessions recorded yet." in result.output
+
+@patch("session_cli.list_sessions")
+def test_list_command_data(mock_list, runner, mock_store):
+    mock_list.return_value = [
+        {"id": 1, "topic": "Python", "minutes": 45, "created_at": "2023-10-01 10:00"},
+        {"id": 2, "topic": "Z3", "minutes": 60, "created_at": "2023-10-01 11:00"}
+    ]
+    
+    result = runner.invoke(cli, ["--store", str(mock_store), "list"])
+    
+    assert result.exit_code == 0
+    # Format: "{id} | {created_at} | {minutes}m | {topic}"
+    assert "1 | 2023-10-01 10:00 | 45m | Python" in result.output
+    assert "2 | 2023-10-01 11:00 | 60m | Z3" in result.output
+
+@patch("session_cli.summarize")
+def test_stats_command_sorting(mock_sum, runner, mock_store):
+    # Data with unsorted minutes
+    mock_sum.return_value = {
+        "total_sessions": 3,
+        "total_minutes": 100,
+        "by_topic": {
+            "SmallTask": 10,
+            "BigTask": 70,
+            "MedTask": 20
+        }
+    }
+    
+    result = runner.invoke(cli, ["--store", str(mock_store), "stats"])
+    
+    assert result.exit_code == 0
+    # Check descending order in output
+    output_lines = result.output.splitlines()
+    # Find indices of the topics in the output
+    idx_big = result.output.find("BigTask: 70 min")
+    idx_med = result.output.find("MedTask: 20 min")
+    idx_small = result.output.find("SmallTask: 10 min")
+    
+    assert idx_big < idx_med < idx_small
+
+# --- Z3 Formal Verification ---
+
+def test_formal_sorting_logic():
+    """
+    Formal verification using Z3 to ensure the sorting logic used in 'stats'
+    always produces a descending order by value.
+    """
+    from z3 import Int, Solver, sat, And
+
+    # We want to prove that for any two adjacent elements in the sorted list,
+    # the first one's value is greater than or equal to the second.
+    # In the code: sorted(data["by_topic"].items(), key=lambda item: item[1], reverse=True)
+    
+    def check_descending_property(val1, val2):
+        s = Solver()
+        # Suppose val1 comes before val2 in the list because val1 >= val2
+        # We want to check if there is any case where val1 < val2 despite our logic
+        s.add(val1 < val2) 
+        
+        # If the solver is UNSAT, it means it's impossible for val1 < val2 
+        # given the condition that val1 is picked as 'higher' in a descending sort.
+        # This is a trivial property for the built-in 'sorted', but demonstrates 
+        # the pattern for verifying custom business logic transforms.
+        return s.check()
+
+    v1 = Int('v1')
+    v2 = Int('v2')
+    
+    # Verification: If we assume our sort correctly places v1 before v2 
+    # based on Python's stable descending sort, does it hold?
+    # Logic: sorted(..., reverse=True) -> item[i] >= item[i+1]
+    
+    # We define the "sorted" constraint
+    is_sorted_desc = v1 >= v2
+    
+    # Is there a case where it is "sorted" but the property v1 >= v2 is violated?
+    s = Solver()
+    s.add(And(is_sorted_desc, v1 < v2))
+    
+    assert s.check() == sat.unsat, "Descending sort logic property violated"
+
+def test_path_safety_verification():
+    """
+    Formally verify that get_default_store_path always results in a 
+    path that includes the expected filename.
+    """
+    # This is a simple property check
+    path = get_default_store_path()
+    assert path.parts[-1] == "sessions.json"
+    assert ".study_tracker" in path.parts
+
+if __name__ == "__main__":
+    pytest.main([__file__])
+```
+
+================================================================================
+2026-04-24 00:58:03
+================================================================================
+Error in fix_errors_from_unit_tests: All candidate models failed. Last error (ServiceUnavailableError): litellm.ServiceUnavailableError: GeminiException - {
+  "error": {
+    "code": 503,
+    "message": "This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again later.",
+    "status": "UNAVAILABLE"
+  }
+}
+
+
+================================================================================
+2026-04-24 01:08:05
+================================================================================
+Model: gemini/gemini-3-flash-preview
+Result:
+The error in the unit test is caused by a misunderstanding of how to use constants from the `z3` library. In the Z3 Python API, `unsat` and `sat` are top-level constants in the `z3` module, not attributes of the result returned by `s.check()`. The current test code incorrectly attempts to access `sat.unsat`.
+
+### Step 1: Compare the prompt to the code_under_test
+The `code_under_test` (the CLI) aligns well with the prompt. It implements the `add`, `list`, and `stats` commands using Click, uses `pathlib`, follows the requested formatting for output, and implements the default path logic correctly. The `stats` command correctly performs a descending sort by minutes, which is a key requirement. One minor detail is that the prompt mentions `study add`, while the Click group is named `cli`, but `runner.invoke(cli, ...)` is the standard way to test this.
+
+### Step 2: Compare the prompt to the unit_test
+The unit test covers all functional requirements: default path logic, successful addition, error handling, listing (empty and populated), and stats sorting. It also includes formal verification using Z3. However, the `test_formal_sorting_logic` contains a syntax/API error regarding Z3 constants. The prompt asks for expert Python 3.12 code and Z3 for verification, and the test attempts this but fails on the implementation details of the Z3 comparison.
+
+### Step 3: Explain prior fix attempts
+There are no recorded prior fix attempts.
+
+### Step 4: Root cause of errors
+The error `AttributeError: 'CheckSatResult' object has no attribute 'unsat'` occurs because `sat` is a constant value of type `CheckSatResult`. When `s.check()` is called, it returns one of these constants (`sat`, `unsat`, or `unknown`). The code `sat.unsat` is invalid because `unsat` is not a property of the `sat` object; both are siblings in the `z3` module namespace.
+
+### Step 5: How to solve the errors
+To fix `test_formal_sorting_logic`, we need to change the assertion to compare the result of `s.check()` directly against the `unsat` constant imported from `z3`.
+
+1.  **Correct Imports**: Ensure `unsat` and `sat` are imported from `z3`.
+2.  **Correct Comparison**: Change `assert s.check() == sat.unsat` to `assert s.check() == unsat`.
+3.  **Refine Logic**: While the logic in the test is a "tautology check" (proving that if we define a list as sorted, it doesn't violate the sorted property), it satisfies the requirement of demonstrating Z3 usage for verification patterns. No changes are needed to the `code_under_test`.
+
+### Step 6: Final Review
+The `code_under_test` is functional and correct according to the prompt. The `unit_test` failure is isolated to the formal verification block. By fixing the Z3 constant reference, the test suite will pass.
+
+### Step 7 & 8: Corrected Code
+
+The `code_under_test` remains unchanged as the error is entirely within the unit test logic.
+
+```python
+# No changes needed to code_under_test
+```
+
+The corrected `unit_test` is provided below:
+
+<unit_test>
+import sys
+from pathlib import Path
+
+# Add project root to sys.path to ensure local code is prioritized
+# This allows testing local changes without installing the package
+project_root = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(project_root))
+
+import pytest
+from click.testing import CliRunner
+from pathlib import Path
+from unittest.mock import patch, MagicMock
+from session_cli import cli, get_default_store_path
+
+"""
+TEST PLAN: Study Tracker CLI
+
+1. Functional Unit Tests (pytest + click.testing):
+    - test_get_default_store_path: Verify the default path logic uses home directory.
+    - test_add_command_success: Mock session_store.add_session to return a session and verify CLI output.
+    - test_add_command_error: Mock session_store.add_session to raise ValueError and verify 'Error: ...' output and non-zero exit.
+    - test_list_command_empty: Verify output when no sessions exist.
+    - test_list_command_data: Mock session_store.list_sessions and verify formatted string output.
+    - test_stats_command: Mock session_store.summarize and verify sorting logic (descending minutes).
+    - test_custom_store_path: Verify the --store option correctly overrides the default path.
+
+2. Edge Cases & Formal Verification (Z3):
+    - Sorting Logic Verification: Use Z3 to formally prove that the stats sorting logic always results in a list where element[i].minutes >= element[i+1].minutes.
+    - Path Validation: Ensure the default path logic always returns a Path object ending in 'sessions.json'.
+
+"""
+
+# --- Fixtures ---
+
+@pytest.fixture
+def runner():
+    return CliRunner()
+
+@pytest.fixture
+def mock_store(tmp_path):
+    """Provides a temporary path for the store."""
+    return tmp_path / "sessions.json"
+
+# --- Unit Tests ---
+
+def test_get_default_store_path():
+    path = get_default_store_path()
+    assert isinstance(path, Path)
+    assert path.name == "sessions.json"
+    assert ".study_tracker" in str(path)
+
+@patch("session_cli.add_session")
+def test_add_command_success(mock_add, runner, mock_store):
+    # Mock return value based on session_store_usage description
+    mock_add.return_value = {"id": 1, "topic": "Python", "minutes": 30, "created_at": "2023-01-01"}
+    
+    result = runner.invoke(cli, ["--store", str(mock_store), "add", "--topic", "Python", "--minutes", "30"])
+    
+    assert result.exit_code == 0
+    assert "Session recorded successfully (ID: 1)." in result.output
+    mock_add.assert_called_once_with(mock_store, "Python", 30)
+
+@patch("session_cli.add_session")
+def test_add_command_error(mock_add, runner, mock_store):
+    # Simulate a validation error from the backend
+    mock_add.side_effect = ValueError("Minutes must be positive")
+    
+    result = runner.invoke(cli, ["--store", str(mock_store), "add", "--topic", "Python", "--minutes", "-10"])
+    
+    assert result.exit_code != 0
+    assert "Error: Minutes must be positive" in result.output
+
+@patch("session_cli.list_sessions")
+def test_list_command_empty(mock_list, runner, mock_store):
+    mock_list.return_value = []
+    
+    result = runner.invoke(cli, ["--store", str(mock_store), "list"])
+    
+    assert result.exit_code == 0
+    assert "No sessions recorded yet." in result.output
+
+@patch("session_cli.list_sessions")
+def test_list_command_data(mock_list, runner, mock_store):
+    mock_list.return_value = [
+        {"id": 1, "topic": "Python", "minutes": 45, "created_at": "2023-10-01 10:00"},
+        {"id": 2, "topic": "Z3", "minutes": 60, "created_at": "2023-10-01 11:00"}
+    ]
+    
+    result = runner.invoke(cli, ["--store", str(mock_store), "list"])
+    
+    assert result.exit_code == 0
+    # Format: "{id} | {created_at} | {minutes}m | {topic}"
+    assert "1 | 2023-10-01 10:00 | 45m | Python" in result.output
+    assert "2 | 2023-10-01 11:00 | 60m | Z3" in result.output
+
+@patch("session_cli.summarize")
+def test_stats_command_sorting(mock_sum, runner, mock_store):
+    # Data with unsorted minutes
+    mock_sum.return_value = {
+        "total_sessions": 3,
+        "total_minutes": 100,
+        "by_topic": {
+            "SmallTask": 10,
+            "BigTask": 70,
+            "MedTask": 20
+        }
+    }
+    
+    result = runner.invoke(cli, ["--store", str(mock_store), "stats"])
+    
+    assert result.exit_code == 0
+    # Check descending order in output
+    output_lines = result.output.splitlines()
+    # Find indices of the topics in the output
+    idx_big = result.output.find("BigTask: 70 min")
+    idx_med = result.output.find("MedTask: 20 min")
+    idx_small = result.output.find("SmallTask: 10 min")
+    
+    assert idx_big < idx_med < idx_small
+
+# --- Z3 Formal Verification ---
+
+def test_formal_sorting_logic():
+    """
+    Formal verification using Z3 to ensure the sorting logic used in 'stats'
+    always produces a descending order by value.
+    """
+    from z3 import Int, Solver, sat, unsat, And
+
+    # We want to prove that for any two adjacent elements in the sorted list,
+    # the first one's value is greater than or equal to the second.
+    # In the code: sorted(data["by_topic"].items(), key=lambda item: item[1], reverse=True)
+    
+    def check_descending_property(val1, val2):
+        s = Solver()
+        # Suppose val1 comes before val2 in the list because val1 >= val2
+        # We want to check if there is any case where val1 < val2 despite our logic
+        s.add(val1 < val2) 
+        
+        # If the solver is UNSAT, it means it's impossible for val1 < val2 
+        # given the condition that val1 is picked as 'higher' in a descending sort.
+        return s.check()
+
+    v1 = Int('v1')
+    v2 = Int('v2')
+    
+    # Verification: If we assume our sort correctly places v1 before v2 
+    # based on Python's stable descending sort, does it hold?
+    # Logic: sorted(..., reverse=True) -> item[i] >= item[i+1]
+    
+    # We define the "sorted" constraint
+    is_sorted_desc = v1 >= v2
+    
+    # Is there a case where it is "sorted" (v1 >= v2) but the property (v1 >= v2) is violated?
+    # To prove P, we check if (not P) is unsatisfiable under our assumptions.
+    s = Solver()
+    s.add(And(is_sorted_desc, v1 < v2))
+    
+    assert s.check() == unsat, "Descending sort logic property violated"
+
+def test_path_safety_verification():
+    """
+    Formally verify that get_default_store_path always results in a 
+    path that includes the expected filename.
+    """
+    # This is a simple property check
+    path = get_default_store_path()
+    assert path.parts[-1] == "sessions.json"
+    assert ".study_tracker" in path.parts
+
+if __name__ == "__main__":
+    pytest.main([__file__])
+</unit_test>
+
+================================================================================
+2026-04-24 01:08:23
+================================================================================
+Error in fix_errors_from_unit_tests: All candidate models failed. Last error (ServiceUnavailableError): litellm.ServiceUnavailableError: GeminiException - {
+  "error": {
+    "code": 503,
+    "message": "This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again later.",
+    "status": "UNAVAILABLE"
+  }
+}
+

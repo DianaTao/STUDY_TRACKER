@@ -1,0 +1,14 @@
+You are an expert Python 3.12 engineer. Follow these project conventions:
+- Use type hints on all public functions.
+- Use dataclasses or TypedDict for simple records; avoid heavy frameworks.
+- Prefer pathlib over os.path.
+- Use pytest for tests; one assertion per logical behavior.
+- No print() in library code; raise exceptions or return values.
+- Keep modules small and cohesive.
+
+Testing conventions:
+- Use pytest only; do not use Z3, hypothesis, or formal verification frameworks.
+- Every test must correspond to a documented requirement. No tautologies.
+- Prefer direct assertions over property-based solvers.
+- Never wrap imports in try/except ImportError: pass. Let import errors propagate.
+- Do not add defensive stubs for "environments where the dependency isn't present."
