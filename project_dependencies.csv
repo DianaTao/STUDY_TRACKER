@@ -1,1 +1,39 @@
 full_path,file_summary,key_exports,dependencies,content_hash
+examples/session_cli_example.py,"This file demonstrates how to use the session_cli module by simulating command-line interactions for adding, listing, and viewing study session statistics.",[],"[""os"", ""pathlib"", ""click"", ""session_cli""]",5c1c9ea42bae2a09c5d1e53b3d559094e4e8aff951d94c62e8c97dd00800742b
+examples/session_store_example.py,"Error processing file: All candidate models failed. Last error (RateLimitError): litellm.RateLimitError: litellm.RateLimitError: geminiException - {
+  ""error"": {
+    ""code"": 429,
+    ""message"": ""You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To monitor your current usage, head to: https://ai.dev/rate-limit. \n* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_requests, limit: 20, model: gemini-2.5-flash\nPlease retry in 45.261060761s."",
+    ""status"": ""RESOURCE_EXHAUSTED"",
+    ""details"": [
+      {
+        ""@type"": ""type.googleapis.com/google.rpc.Help"",
+        ""links"": [
+          {
+            ""description"": ""Learn more about Gemini API quotas"",
+            ""url"": ""https://ai.google.dev/gemini-api/docs/rate-limits""
+          }
+        ]
+      },
+      {
+        ""@type"": ""type.googleapis.com/google.rpc.QuotaFailure"",
+        ""violations"": [
+          {
+            ""quotaMetric"": ""generativelanguage.googleapis.com/generate_content_free_tier_requests"",
+            ""quotaId"": ""GenerateRequestsPerDayPerProjectPerModel-FreeTier"",
+            ""quotaDimensions"": {
+              ""model"": ""gemini-2.5-flash"",
+              ""location"": ""global""
+            },
+            ""quotaValue"": ""20""
+          }
+        ]
+      },
+      {
+        ""@type"": ""type.googleapis.com/google.rpc.RetryInfo"",
+        ""retryDelay"": ""45s""
+      }
+    ]
+  }
+}
+",[],[],error

@@ -1,0 +1,11 @@
+{
+  "timestamp": "2026-04-25T17:42:52.499241+00:00",
+  "exit_code": 1,
+  "tests_passed": 18,
+  "tests_failed": 6,
+  "coverage": 0.0,
+  "test_hash": "8a2c37d539216132cb669182a70b6f61df070c87840de74102ba52e2f2b28301",
+  "test_files": {
+    "test_coach.py": "8a2c37d539216132cb669182a70b6f61df070c87840de74102ba52e2f2b28301"
+  }
+}

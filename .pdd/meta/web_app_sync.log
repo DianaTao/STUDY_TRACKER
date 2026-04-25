@@ -1,0 +1,1 @@
+{"timestamp": "2026-04-25T11:08:04.456477", "operation": "generate", "reason": "Manual invocation via CLI", "invocation_mode": "manual", "estimated_cost": 0.0, "confidence": 0.0, "decision_type": "unknown", "success": false, "duration": 7.176399230957031e-05, "actual_cost": 0.0, "model": "unknown", "error": "Invalid value for 'PROMPT_FILE': Path 'web_app' does not exist."}

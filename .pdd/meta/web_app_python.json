@@ -1,0 +1,15 @@
+{
+  "pdd_version": "0.0.179",
+  "timestamp": "2026-04-25T18:14:20.985334+00:00",
+  "command": "auto-deps",
+  "prompt_hash": "88fda246b98125dcd52a162cbf51cc872aec9f120fdde66cee65d6f86f4b4afe",
+  "code_hash": null,
+  "example_hash": null,
+  "test_hash": "c7706b838c0a6b4a17597d7e836d60d8010e32ba022d21091d54909a1cb54116",
+  "test_files": {
+    "test_web_app.py": "c7706b838c0a6b4a17597d7e836d60d8010e32ba022d21091d54909a1cb54116"
+  },
+  "include_deps": {
+    "context/python_preamble.prompt": "ce0a0982e0d27106f14ca87f4fd2e658eabdf66360cb5885bd6b957879ee4489"
+  }
+}

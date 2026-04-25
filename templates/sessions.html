@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block title %}Sessions — Study Quest{% endblock %}
+{% block content %}
+
+<div class="page-header">
+  <h1 class="page-title">All Sessions</h1>
+  <a href="{{ url_for('add_session_form') }}" class="btn">+ Add Session</a>
+</div>
+
+{% if sessions %}
+<table>
+  <thead>
+    <tr>
+      <th>Topic</th>
+      <th>Minutes</th>
+      <th>Mood</th>
+      <th>Notes</th>
+      <th>Date</th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for s in sessions %}
+    <tr>
+      <td><strong>{{ s.topic }}</strong></td>
+      <td>{{ s.minutes }}</td>
+      <td>{{ s.get("mood", "—") }}</td>
+      <td class="notes-cell">{{ s.get("notes") or "—" }}</td>
+      <td class="muted">{{ s.created_at[:10] }}</td>
+      <td>
+        <form action="{{ url_for('delete_session', session_id=s.id) }}" method="POST"
+              onsubmit="return confirm('Delete this session?')">
+          <button type="submit" class="btn-delete">✕</button>
+        </form>
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% else %}
+<div class="empty-state">
+  <p>No sessions yet.</p>
+  <a href="{{ url_for('add_session_form') }}" class="btn">Add your first session</a>
+</div>
+{% endif %}
+
+{% endblock %}

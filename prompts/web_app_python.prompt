@@ -1,0 +1,128 @@
+<include>context/python_preamble.prompt</include>
+
+<pdd-reason>
+Flask web app for Study Quest, a gamified prompt-driven study tracker.
+The web app provides a polished dashboard for interview demos.
+</pdd-reason>
+
+<pdd-interface>
+{
+  "type": "web_app",
+  "framework": "flask",
+  "routes": [
+    {"path": "/", "method": "GET", "description": "Dashboard"},
+    {"path": "/sessions", "method": "GET", "description": "List sessions"},
+    {"path": "/sessions/add", "method": "GET", "description": "Show add session form"},
+    {"path": "/sessions/add", "method": "POST", "description": "Create a new session"},
+    {"path": "/sessions/delete/<session_id>", "method": "POST", "description": "Delete a session"},
+    {"path": "/demo-reset", "method": "POST", "description": "Seed demo data"}
+  ]
+}
+</pdd-interface>
+
+<pdd-dependency>session_store_python.prompt</pdd-dependency>
+<pdd-dependency>quest_engine_python.prompt</pdd-dependency>
+
+% Role & Scope
+Build a small Flask web app for demoing Study Quest.
+The app should look polished, modern, and useful while remaining simple enough for PDD-generated code.
+
+% Application Behavior
+1. Expose a Flask application object named `app`.
+2. Store path defaults to ~/.study_tracker/sessions.json.
+3. Store path can be configured through an environment variable named STUDY_TRACKER_STORE.
+4. Daily goal defaults to 120 minutes.
+5. Daily goal can be configured through an environment variable named STUDY_TRACKER_DAILY_GOAL.
+6. The app should be runnable with:
+   python -m src.web_app
+
+% Routes
+
+1. GET `/`
+   - Shows the main dashboard.
+   - Includes:
+     - total minutes
+     - today minutes
+     - daily goal progress
+     - streak days
+     - favorite topic
+     - achievements
+     - daily quests
+     - suggestion from summary["suggestion"]
+     - recent sessions
+   - Uses session_store.summarize.
+   - Uses session_store.list_sessions.
+   - Uses quest_engine.generate_daily_quests.
+
+2. GET `/sessions`
+   - Shows all sessions in reverse chronological order.
+   - Each session displays:
+     - topic
+     - minutes
+     - mood
+     - notes
+     - created_at
+     - delete button
+
+3. GET `/sessions/add`
+   - Shows a form with:
+     - topic
+     - minutes
+     - mood
+     - notes
+
+4. POST `/sessions/add`
+   - Validates submitted form data.
+   - Calls session_store.add_session.
+   - Redirects to `/` on success.
+   - Shows a friendly error message on ValueError.
+
+5. POST `/sessions/delete/<session_id>`
+   - Calls session_store.delete_session.
+   - Redirects to `/sessions`.
+
+6. POST `/demo-reset`
+   - Calls session_store.seed_demo_data.
+   - Redirects to `/`.
+
+% UI Requirements
+1. Use Jinja templates.
+2. Use a base template with a navigation bar.
+3. Use simple CSS from static/styles.css.
+4. Do not require JavaScript for core functionality.
+5. The dashboard should feel like a modern productivity app.
+6. Use visual cards for:
+   - Today's progress
+   - Streak
+   - Favorite topic
+   - Badges
+7. Show a progress bar for daily goal completion.
+8. Show quests as checklist-style cards.
+9. Use emojis sparingly for demo polish:
+   - 📚 dashboard
+   - 🔥 streak
+   - 🏆 achievements
+   - 🎯 goal
+   - ✅ completed quest
+10. Keep HTML semantic and readable.
+
+% Demo Flow
+The web app should support this live demo:
+1. Start app.
+2. Click "Load Demo Data".
+3. Show dashboard progress, streaks, quests, and achievements.
+4. Add a new session.
+5. Return to dashboard and show updated progress.
+6. Open sessions page and show stored history.
+
+% Quality Requirements
+1. Keep route functions small.
+2. Keep business logic in session_store and quest_engine.
+3. Do not duplicate summary logic in the web app.
+4. Keep behavior deterministic and easy to test.
+5. Avoid unnecessary dependencies.
+
+% Generation Output Constraints
+- Output ONLY the main application source file (src/web_app.py) and supporting template/static files.
+- Do NOT output test files (tests/test_web_app.py or any test_ files). Tests are generated in a separate step.
+- The last code block in your response must be src/web_app.py Python source, not test code.

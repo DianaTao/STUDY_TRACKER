@@ -1,0 +1,43 @@
+<include>context/python_preamble.prompt</include>
+
+% Dependencies
+<session_store>
+    <include>examples/session_store_example.py</include>
+</session_store>
+
+<pdd-reason>
+Deterministic daily quest engine for study tracker gamification.
+</pdd-reason>
+
+<pdd-interface>
+{
+  "type": "module",
+  "module": {
+    "functions": [
+      {
+        "name": "generate_daily_quests",
+        "signature": "(sessions: list[dict], daily_goal: int = 120) -> list[dict]",
+        "returns": "list[dict]"
+      }
+    ]
+  }
+}
+</pdd-interface>
+
+% Role & Scope
+Generate simple daily quests from study session history.
+
+% Requirements
+1. Return exactly 3 quests.
+2. Each quest is a dict with:
+   - id: str
+   - title: str
+   - description: str
+   - completed: bool
+   - xp: int
+3. Quest 1 is based on daily goal progress.
+4. Quest 2 targets the least-studied recent topic.
+5. Quest 3 encourages adding a note or reflection.
+6. Quest generation must be deterministic.
+7. Do not use randomness.
+8. Do not call external APIs.

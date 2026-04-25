@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+{% block title %}Dashboard — Study Quest{% endblock %}
+{% block content %}
+
+<h1 class="page-title">Dashboard</h1>
+
+<div class="grid-4">
+  <div class="card">
+    <div class="card-label">🎯 Today</div>
+    <div class="stat-value">{{ today_minutes }}<span class="stat-unit">min</span></div>
+    <div class="progress-container">
+      <div class="progress-bar" style="width: {{ progress_pct }}%"></div>
+    </div>
+    <div class="stat-sub">{{ progress_pct }}% of {{ daily_goal }} min goal</div>
+  </div>
+
+  <div class="card">
+    <div class="card-label">🔥 Streak</div>
+    <div class="stat-value">{{ streak }}<span class="stat-unit">days</span></div>
+    <div class="stat-sub">Keep it going!</div>
+  </div>
+
+  <div class="card">
+    <div class="card-label">📊 Total</div>
+    <div class="stat-value">{{ summary.total_minutes }}<span class="stat-unit">min</span></div>
+    <div class="stat-sub">{{ summary.total_sessions }} sessions</div>
+  </div>
+
+  <div class="card">
+    <div class="card-label">📚 Top Topic</div>
+    <div class="stat-value topic-value">{{ favorite_topic or "—" }}</div>
+    <div class="stat-sub">most studied</div>
+  </div>
+</div>
+
+<div class="two-col">
+  <section>
+    <h2 class="section-title">Daily Quests</h2>
+    {% for quest in quests %}
+    <div class="quest-card {% if quest.completed %}completed{% endif %}">
+      <span class="quest-icon">{% if quest.completed %}✅{% else %}⬜{% endif %}</span>
+      <div class="quest-body">
+        <strong>{{ quest.title }}</strong>
+        <p>{{ quest.description }}</p>
+      </div>
+      <span class="xp-badge">+{{ quest.xp }} XP</span>
+    </div>
+    {% endfor %}
+  </section>
+
+  <section>
+    <h2 class="section-title">🏆 Achievements</h2>
+    <div class="badge-grid">
+      {% for badge in achievements %}
+      <span class="badge">{{ badge }}</span>
+      {% else %}
+      <p class="muted">Complete sessions to earn achievements.</p>
+      {% endfor %}
+    </div>
+
+    <h2 class="section-title" style="margin-top:1.5rem">Recent Sessions</h2>
+    {% if recent_sessions %}
+    <table>
+      <thead><tr><th>Topic</th><th>Min</th><th>Mood</th></tr></thead>
+      <tbody>
+        {% for s in recent_sessions %}
+        <tr>
+          <td>{{ s.topic }}</td>
+          <td>{{ s.minutes }}</td>
+          <td>{{ s.get("mood", "—") }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <p class="muted">No sessions yet.</p>
+    {% endif %}
+  </section>
+</div>
+
+<div class="demo-bar">
+  <form action="{{ url_for('demo_reset') }}" method="POST">
+    <button type="submit" class="btn btn-secondary">⚡ Load Demo Data</button>
+  </form>
+</div>
+
+{% endblock %}

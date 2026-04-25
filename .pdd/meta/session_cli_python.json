@@ -1,14 +1,13 @@
 {
   "pdd_version": "0.0.179",
-  "timestamp": "2026-04-24T21:39:22.470047+00:00",
-  "command": "generate",
-  "prompt_hash": "38e9a461aa4e491e54ab661c61db39e4508a59faf8de721af6b9669e52e06015",
+  "timestamp": "2026-04-25T17:51:59.578296+00:00",
+  "command": "auto-deps",
+  "prompt_hash": "6d2f379a421cc9d3fa2068eb38f24318af542245127d776683139f70e53a5a9f",
   "code_hash": "b0b1bd36b34c457e0c05ada46f71ffba6d7da9c0e882e0c06c786fbcb97b1726",
   "example_hash": "5c1c9ea42bae2a09c5d1e53b3d559094e4e8aff951d94c62e8c97dd00800742b",
-  "test_hash": "171151344126fc937369cbe9bfa784264ee78870aa5134e23aa4174ece609436",
+  "test_hash": "a3a8b4aca524a86b0fbeac01c25a8b5f50a170302623cfc7ad738ade66d1759a",
   "test_files": {
-    "test_session_cli.py": "171151344126fc937369cbe9bfa784264ee78870aa5134e23aa4174ece609436",
-    "test_session_cli_1.py": "13f32d7269748ef5df70d16a1f290235b0e5ff03a3042111d4759d962850c1c9"
+    "test_session_cli.py": "a3a8b4aca524a86b0fbeac01c25a8b5f50a170302623cfc7ad738ade66d1759a"
   },
   "include_deps": {
     "context/python_preamble.prompt": "ce0a0982e0d27106f14ca87f4fd2e658eabdf66360cb5885bd6b957879ee4489",

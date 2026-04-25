@@ -1,34 +1,114 @@
 <include>context/python_preamble.prompt</include>
 
-<pdd-reason>Click-based CLI exposing add/list/stats for study sessions.</pdd-reason>
+<pdd-reason>
+Fun Click-based CLI for Study Quest, a gamified prompt-driven study tracker demo.
+The CLI exposes add/list/stats/dashboard/delete/demo-reset commands.
+</pdd-reason>
 
 <pdd-interface>
 {
   "type": "cli",
   "cli": {
     "commands": [
-      {"name": "add",   "description": "Record a new study session."},
-      {"name": "list",  "description": "Show all sessions."},
-      {"name": "stats", "description": "Show totals and per-topic breakdown."}
+      {"name": "add", "description": "Record a new study session."},
+      {"name": "list", "description": "Show study sessions."},
+      {"name": "stats", "description": "Show numerical summary stats."},
+      {"name": "dashboard", "description": "Show a terminal dashboard with progress, streaks, and badges."},
+      {"name": "delete", "description": "Delete a session by id."},
+      {"name": "demo-reset", "description": "Seed the tracker with realistic demo data."}
     ]
   }
 }
 </pdd-interface>
 
 <pdd-dependency>session_store_python.prompt</pdd-dependency>
+<pdd-dependency>quest_engine_python.prompt</pdd-dependency>
 
 % Role & Scope
-A Click CLI (`study`) that wraps the session_store library.
+A Click CLI named `study` that wraps the session_store library.
+The CLI should feel polished and fun for a live interview demo while staying dependency-light.
 
 % Dependencies
 <session_store_usage>
   <include>examples/session_store_example.py</include>
 </session_store_usage>
 
-% Requirements
-1. Entry point: a Click group named `cli` with three subcommands: add, list, stats.
-2. `study add --topic TEXT --minutes INT` calls session_store.add_session and prints the created id.
-3. `study list` prints one line per session: "{id} | {created_at} | {minutes}m | {topic}".
-4. `study stats` prints totals and a sorted per-topic breakdown in descending minutes.
-5. Store path defaults to ~/.study_tracker/sessions.json; overridable via --store PATH.
-6. All commands exit non-zero with a friendly message on ValueError from the store.
+% Global Behavior
+1. Entry point: a Click group named `cli`.
+2. Store path defaults to ~/.study_tracker/sessions.json.
+3. Store path is overridable with a global --store PATH option.
+4. Commands should catch ValueError from the store and exit non-zero with a friendly message.
+5. Output should be clean, readable, deterministic, and demo-friendly.
+6. Use plain text, emojis, and ASCII progress bars.
+7. Do not require third-party packages beyond Click.
+
+% Commands
+
+1. `study add --topic TEXT --minutes INT [--mood TEXT] [--notes TEXT]`
+   - Calls session_store.add_session.
+   - Default mood is "neutral".
+   - Prints a friendly success message:
+     "✅ Added session #3: 45m of CS186"
+   - Also prints mood and notes when present.
+
+2. `study list [--topic TEXT] [--limit INT]`
+   - Calls session_store.list_sessions.
+   - Prints one line per session:
+     "{id} | {created_at} | {minutes}m | {topic} | mood={mood} | {notes}"
+   - If no sessions exist, print:
+     "No study sessions yet. Add one with: study add --topic CS186 --minutes 45"
+
+3. `study stats [--daily-goal INT]`
+   - Calls session_store.summarize.
+   - Prints:
+     - total sessions
+     - total minutes
+     - average session length
+     - favorite topic
+     - streak days
+     - per-topic breakdown sorted by descending minutes
+     - suggestion
+
+4. `study dashboard [--daily-goal INT]`
+   - Calls session_store.summarize.
+   - Calls session_store.list_sessions.
+   - Calls quest_engine.generate_daily_quests.
+   - Shows a polished terminal dashboard:
+     - Title: "📚 Study Quest Dashboard"
+     - Today's progress: "{today_minutes}/{daily_goal} minutes"
+     - ASCII progress bar of width 20
+     - Streak: "🔥 Streak: X day(s)"
+     - Favorite topic
+     - Badges / achievements, one per line
+     - Daily quests
+     - Suggestion from summary["suggestion"]
+   - Example progress bar:
+     "[##########----------] 50%"
+
+5. `study delete SESSION_ID`
+   - Calls session_store.delete_session.
+   - If deleted, print "🗑️ Deleted session #SESSION_ID"
+   - If not found, print a friendly message and exit non-zero.
+
+6. `study demo-reset`
+   - Calls session_store.seed_demo_data.
+   - Overwrites the current store with demo data.
+   - Prints:
+     "✨ Demo data loaded: N sessions"
+   - Then suggests:
+     "Try: study dashboard"
+
+% Demo Flow
+The CLI should support this demo sequence:
+1. study demo-reset
+2. study list
+3. study stats
+4. study dashboard
+5. study add --topic Algorithms --minutes 50 --mood focused --notes "Dynamic programming review"
+6. study dashboard
+
+% Quality Requirements
+1. Keep formatting deterministic so tests can assert output.
+2. Keep implementation easy to understand.
+3. Avoid unnecessary abstractions.
+4. Prefer small helper functions for formatting progress bars and dashboard sections.

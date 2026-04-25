@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block title %}Add Session — Study Quest{% endblock %}
+{% block content %}
+
+<div class="form-page">
+  <h1 class="page-title">Add Study Session</h1>
+
+  {% if error %}
+  <div class="error-box">{{ error }}</div>
+  {% endif %}
+
+  <form method="POST" action="{{ url_for('add_session_submit') }}" class="session-form">
+    <div class="field">
+      <label for="topic">Topic</label>
+      <input id="topic" name="topic" type="text" placeholder="e.g. Python, System Design" required autofocus>
+    </div>
+
+    <div class="field">
+      <label for="minutes">Minutes</label>
+      <input id="minutes" name="minutes" type="number" min="1" max="480" placeholder="30" required>
+    </div>
+
+    <div class="field">
+      <label for="mood">Mood</label>
+      <select id="mood" name="mood">
+        <option value="focused">🎯 Focused</option>
+        <option value="confident">💪 Confident</option>
+        <option value="neutral" selected>😐 Neutral</option>
+        <option value="tired">😴 Tired</option>
+        <option value="distracted">😵 Distracted</option>
+      </select>
+    </div>
+
+    <div class="field">
+      <label for="notes">Notes <span class="optional">(optional)</span></label>
+      <textarea id="notes" name="notes" rows="3" placeholder="What did you cover today?"></textarea>
+    </div>
+
+    <div class="form-actions">
+      <button type="submit" class="btn">Save Session</button>
+      <a href="{{ url_for('dashboard') }}" class="btn btn-secondary">Cancel</a>
+    </div>
+  </form>
+</div>
+
+{% endblock %}
